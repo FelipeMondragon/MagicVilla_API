@@ -89,13 +89,13 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 if (await _repository.GetAsync(v => v.VillaNo == villaNumberDTO.VillaNo) != null)
                 {
-                    ModelState.AddModelError("CustomError", "Villa already exists");
+                    ModelState.AddModelError("ErrorMessages", "Villa already exists");
                     return BadRequest(ModelState);
                 }
 
                 if (await _villaRepository.GetAsync(v => v.Id == villaNumberDTO.VillaId) == null)
                 {
-                    ModelState.AddModelError("CustomError", "Villa Id isn't valid");
+                    ModelState.AddModelError("ErrorMessages", "Villa Id isn't valid");
                     return BadRequest(ModelState);
                 }
 
@@ -152,7 +152,7 @@ namespace MagicVilla_VillaAPI.Controllers
 
                 if (await _villaRepository.GetAsync(v => v.Id == updateDTO.VillaId) == null)
                 {
-                    ModelState.AddModelError("CustomError", "Villa Id isn't valid");
+                    ModelState.AddModelError("ErrorMessages", "Villa Id isn't valid");
                     return BadRequest(ModelState);
                 }
 

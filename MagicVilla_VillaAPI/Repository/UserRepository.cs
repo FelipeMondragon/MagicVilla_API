@@ -15,15 +15,17 @@ namespace MagicVilla_VillaAPI.Repository
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private string secretKey;
         private IMapper _mapper;
         public UserRepository(ApplicationDbContext context, IConfiguration configuration,
-            UserManager<ApplicationUser> userManager, IMapper mapper)
+            UserManager<ApplicationUser> userManager, IMapper mapper, RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             secretKey = configuration.GetValue<string>("ApiSettings:Secret");
             _userManager = userManager;
             _mapper = mapper;
+            _roleManager = roleManager;
         }
         public bool IsUniqueUser(string username)
         {
@@ -68,14 +70,13 @@ namespace MagicVilla_VillaAPI.Repository
             {
                 Token = tokenHandler.WriteToken(token),
                 User = _mapper.Map<UserDTO>(user),
-                Role = roles.FirstOrDefault(),
             };
             return loginResponseDTO;
         }
 
         public async Task<UserDTO> Register(RegistrationRequestDTO registrationRequestDTO)
         {
-            ApplicationUser user = new ApplicationUser()
+            ApplicationUser user = new()
             {
                 UserName = registrationRequestDTO.UserName,
                 Email = registrationRequestDTO.UserName,
@@ -88,6 +89,11 @@ namespace MagicVilla_VillaAPI.Repository
                 var result = await _userManager.CreateAsync(user, registrationRequestDTO.Password);
                 if (result.Succeeded)
                 {
+                    if (!_roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("admin"));
+                        await _roleManager.CreateAsync(new IdentityRole("customer"));
+                    }
                     await _userManager.AddToRoleAsync(user, "admin");
                     var userToReturn = _context.ApplicationUsers.FirstOrDefault(u => u.UserName == registrationRequestDTO.UserName);
                     return _mapper.Map<UserDTO>(userToReturn);
